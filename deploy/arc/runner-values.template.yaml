@@ -1,0 +1,61 @@
+githubConfigUrl: "__GITHUB_CONFIG_URL__"
+githubConfigSecret: arc-github-app
+runnerScaleSetName: "__RUNNER_SCALE_SET_NAME__"
+
+minRunners: 0
+maxRunners: __MAX_RUNNERS__
+
+controllerServiceAccount:
+  namespace: arc-systems
+  name: arc-gha-rs-controller
+
+template:
+  metadata:
+    labels:
+      app.kubernetes.io/name: copilot-aks-runner
+      app.kubernetes.io/part-of: copilot-aks-poc
+      azure.workload.identity/use: "true"
+  spec:
+    serviceAccountName: arc-runner
+    automountServiceAccountToken: false
+    restartPolicy: Never
+    nodeSelector:
+      workload: arc-runner
+    tolerations:
+      - key: workload
+        operator: Equal
+        value: arc-runner
+        effect: NoSchedule
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1001
+      runAsGroup: 123
+      fsGroup: 123
+      seccompProfile:
+        type: RuntimeDefault
+    containers:
+      - name: runner
+        image: "__RUNNER_IMAGE__"
+        imagePullPolicy: IfNotPresent
+        command:
+          - /home/runner/run.sh
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: false
+        resources:
+          requests:
+            cpu: "1"
+            memory: 2Gi
+          limits:
+            cpu: "3"
+            memory: 6Gi
+        volumeMounts:
+          - name: work
+            mountPath: /home/runner/_work
+    volumes:
+      - name: work
+        emptyDir:
+          sizeLimit: 20Gi

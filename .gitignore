@@ -1,0 +1,8 @@
+.local/
+.playwright-cli/
+*.pem
+*.pfx
+*.key
+deployment-outputs.json
+runner-values.generated.yaml
+app-manifest-response.json

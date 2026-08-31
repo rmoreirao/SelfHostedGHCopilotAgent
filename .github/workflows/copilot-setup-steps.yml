@@ -1,0 +1,23 @@
+name: Copilot Setup Steps
+
+on:
+  workflow_dispatch:
+
+jobs:
+  copilot-setup-steps:
+    runs-on: copilot-aks-poc
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Prove AKS runner isolation
+        env:
+          VALIDATION_KEY_VAULT_URL: ${{ vars.VALIDATION_KEY_VAULT_URL }}
+          VALIDATION_SECRET_NAME: ${{ vars.VALIDATION_SECRET_NAME }}
+          VALIDATION_EXPECTED_VALUE: ${{ vars.VALIDATION_EXPECTED_VALUE }}
+        run: |
+          echo "COPILOT_SETUP_RUNNER=${RUNNER_NAME}"
+          bash scripts/Test-RunnerPrivateAccess.sh
