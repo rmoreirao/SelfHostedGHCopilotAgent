@@ -174,7 +174,7 @@ function Set-PrivateFilePermissions {
             $Path,
             '/inheritance:r',
             '/grant:r',
-            "$([System.Security.Principal.WindowsIdentity]::GetCurrent().Name):(R,W)"
+            "$([System.Security.Principal.WindowsIdentity]::GetCurrent().Name):(F)"
         )
     }
     else {

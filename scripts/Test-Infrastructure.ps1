@@ -210,7 +210,7 @@ Assert-Condition ($runnerSet.metadata.name -eq $runnerScaleSetName) 'ARC Autosca
 $listenerPods = (
     Invoke-CheckedCommand kubectl @(
         'get', 'pods',
-        '--namespace', 'arc-runners',
+        '--all-namespaces',
         '--selector', "actions.github.com/scale-set-name=$runnerScaleSetName",
         '--output', 'json'
     ) -CaptureOutput

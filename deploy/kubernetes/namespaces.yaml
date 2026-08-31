@@ -2,8 +2,6 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: arc-systems
-  annotations:
-    kubernetes.azure.com/set-kube-service-host-fqdn: "true"
   labels:
     app.kubernetes.io/part-of: copilot-aks-poc
 ---
@@ -11,7 +9,5 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: arc-runners
-  annotations:
-    kubernetes.azure.com/set-kube-service-host-fqdn: "true"
   labels:
     app.kubernetes.io/part-of: copilot-aks-poc

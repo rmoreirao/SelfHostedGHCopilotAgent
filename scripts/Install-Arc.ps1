@@ -79,7 +79,11 @@ function Render-Template {
         $content = $content.Replace($entry.Key, [string]$entry.Value)
     }
 
-    $unresolved = [regex]::Matches($content, '__[A-Z0-9_]+__').Value | Select-Object -Unique
+    $unresolved = @(
+        [regex]::Matches($content, '__[A-Z0-9_]+__') |
+            ForEach-Object Value |
+            Select-Object -Unique
+    )
     if ($unresolved) {
         throw "Template '$InputPath' contains unresolved values: $($unresolved -join ', ')."
     }
@@ -190,8 +194,16 @@ Invoke-CheckedCommand kubectl @(
     $runnerScaleSetName
 )
 Invoke-CheckedCommand kubectl @(
+    'wait',
+    '--for=condition=Ready',
+    'pod',
+    '--all-namespaces',
+    '--selector', "actions.github.com/scale-set-name=$runnerScaleSetName",
+    '--timeout', '5m'
+)
+Invoke-CheckedCommand kubectl @(
     'get', 'pods',
-    '--namespace', 'arc-runners',
+    '--all-namespaces',
     '--selector', "actions.github.com/scale-set-name=$runnerScaleSetName"
 )
 

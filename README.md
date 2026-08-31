@@ -21,7 +21,7 @@ by network controls in Azure.
 ```mermaid
 flowchart LR
     Copilot[GitHub Copilot<br/>cloud orchestration] --> GitHub[GitHub Actions<br/>runner scale set]
-    GitHub --> Listener[ARC listener<br/>arc-runners]
+    GitHub --> Listener[ARC listener<br/>arc-systems]
     Listener --> Runner[Ephemeral runner pod<br/>scale-to-zero node pool]
     Runner --> Firewall[Azure Firewall<br/>explicit FQDN allowlist]
     Firewall --> GitHub
@@ -49,9 +49,9 @@ The deployment creates:
 - ARC `0.14.2` with runner image
   `ghcr.io/actions/actions-runner:2.337.0`, `minRunners: 0`, and
   `maxRunners: 3`.
-- Default-deny Cilium policies. Runner pods can reach DNS, the Kubernetes API
-  without an API token, firewall-controlled public HTTPS, and only the
-  validation vault private endpoint.
+- Default-deny Cilium policies in both ARC namespaces. Runner pods can reach
+  DNS, the Kubernetes API without an API token, firewall-controlled public
+  HTTPS, and only the validation vault private endpoint.
 
 No existing VNet, Key Vault, private endpoint, or other private resource is
 connected to the PoC.
