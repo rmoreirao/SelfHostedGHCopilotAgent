@@ -251,8 +251,42 @@ if (-not $agentTask.pullRequestNumber -or $agentTask.pullRequestState -ne 'OPEN'
     throw 'Copilot did not leave an open validation pull request.'
 }
 
-$agentLogs = Invoke-AgentTaskCommand @(
-    'view', [string]$agentTask.id,
+$pullRequest = (
+    Invoke-CheckedCommand gh @(
+        'pr', 'view', [string]$agentTask.pullRequestNumber,
+        '--repo', $Repository,
+        '--json', 'number,state,url,headRefName'
+    ) -CaptureOutput
+) | ConvertFrom-Json
+
+$agentRun = Wait-Until -Deadline ([DateTimeOffset]::UtcNow.AddMinutes(2)) `
+    -FailureMessage 'The Actions run for the Copilot task did not appear.' `
+    -Condition {
+        $runs = @(
+            (
+                Invoke-CheckedCommand gh @(
+                    'run', 'list',
+                    '--repo', $Repository,
+                    '--branch', [string]$pullRequest.headRefName,
+                    '--limit', '20',
+                    '--json', 'databaseId,status,conclusion,url,createdAt,workflowName'
+                ) -CaptureOutput
+            ) | ConvertFrom-Json
+        )
+        return $runs |
+            Where-Object {
+                $_.workflowName -eq 'Copilot cloud agent' -and
+                $_.status -eq 'completed'
+            } |
+            Sort-Object createdAt -Descending |
+            Select-Object -First 1
+    }
+if ($agentRun.conclusion -ne 'success') {
+    throw "Copilot Actions run concluded '$($agentRun.conclusion)'."
+}
+
+$agentLogs = Invoke-CheckedCommand gh @(
+    'run', 'view', [string]$agentRun.databaseId,
     '--repo', $Repository,
     '--log'
 ) -CaptureOutput
@@ -287,6 +321,8 @@ $evidence = [ordered]@{
     copilotSessionId = $agentTask.id
     copilotPullRequestNumber = $agentTask.pullRequestNumber
     copilotPullRequestUrl = $agentTask.pullRequestUrl
+    copilotWorkflowRunId = $agentRun.databaseId
+    copilotWorkflowRunUrl = $agentRun.url
     ephemeralSmokeRunnerObserved = $smokeRunnerObserved
     ephemeralCopilotRunnerObserved = $agentRunnerObserved
 }
