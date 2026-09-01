@@ -14,7 +14,7 @@ param(
 
 . (Join-Path $PSScriptRoot 'Common.ps1')
 
-foreach ($command in @('gh', 'kubectl')) {
+foreach ($command in @('az', 'gh', 'kubectl', 'kubelogin')) {
     Assert-Command $command
 }
 
@@ -61,8 +61,25 @@ function Get-RunnerPods {
 
 $root = Get-PocRepositoryRoot
 $outputs = Get-PocDeploymentOutputs -DeploymentName $DeploymentName
+$resourceGroupName = Get-PocOutputValue $outputs 'resourceGroupName'
+$aksName = Get-PocOutputValue $outputs 'aksName'
 $runnerScaleSetName = Get-PocOutputValue $outputs 'runnerScaleSetName'
 $deadline = [DateTimeOffset]::UtcNow.AddMinutes($TimeoutMinutes)
+
+$aksPowerState = (
+    Invoke-CheckedCommand az @(
+        'aks', 'show',
+        '--resource-group', $resourceGroupName,
+        '--name', $aksName,
+        '--query', 'powerState.code',
+        '--output', 'tsv',
+        '--only-show-errors'
+    ) -CaptureOutput
+).Trim()
+if ($aksPowerState -ne 'Running') {
+    throw "AKS cluster '$aksName' is '$aksPowerState'. Start it before end-to-end validation."
+}
+Connect-PocAks -ResourceGroupName $resourceGroupName -AksName $aksName
 
 $copilotConfiguration = (
     Invoke-CheckedCommand gh @(
@@ -113,7 +130,7 @@ $smokeRun = Wait-Until -Deadline $deadline -FailureMessage 'The smoke workflow r
 
 $smokeRunnerObserved = $false
 do {
-    if ((Get-RunnerPods -ScaleSetName $runnerScaleSetName).Count -gt 0) {
+    if (@(Get-RunnerPods -ScaleSetName $runnerScaleSetName).Count -gt 0) {
         $smokeRunnerObserved = $true
     }
 
@@ -158,7 +175,7 @@ foreach ($marker in @('EPHEMERAL_RUNNER_VALIDATED=', 'PRIVATE_ACCESS_VALIDATED='
 
 $null = Wait-Until -Deadline ([DateTimeOffset]::UtcNow.AddMinutes(5)) `
     -FailureMessage 'The smoke runner pod was not deleted.' `
-    -Condition { (Get-RunnerPods -ScaleSetName $runnerScaleSetName).Count -eq 0 }
+    -Condition { @(Get-RunnerPods -ScaleSetName $runnerScaleSetName).Count -eq 0 }
 
 $existingTaskIds = @(
     (
@@ -204,7 +221,7 @@ $agentTask = Wait-Until -Deadline $deadline -FailureMessage 'The Copilot agent t
 
 $agentRunnerObserved = $false
 do {
-    if ((Get-RunnerPods -ScaleSetName $runnerScaleSetName).Count -gt 0) {
+    if (@(Get-RunnerPods -ScaleSetName $runnerScaleSetName).Count -gt 0) {
         $agentRunnerObserved = $true
     }
 
@@ -259,7 +276,7 @@ if ($changedFiles.Count -ne 1 -or $changedFiles[0] -ne 'validation/copilot-aks-p
 
 $null = Wait-Until -Deadline ([DateTimeOffset]::UtcNow.AddMinutes(5)) `
     -FailureMessage 'The Copilot task runner pod was not deleted.' `
-    -Condition { (Get-RunnerPods -ScaleSetName $runnerScaleSetName).Count -eq 0 }
+    -Condition { @(Get-RunnerPods -ScaleSetName $runnerScaleSetName).Count -eq 0 }
 
 $evidence = [ordered]@{
     validatedAt = [DateTimeOffset]::UtcNow.ToString('O')
