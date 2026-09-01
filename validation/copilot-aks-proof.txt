@@ -1,0 +1,2 @@
+copilot-runner=aks
+private-access=validated
