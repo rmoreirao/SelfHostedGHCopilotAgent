@@ -83,17 +83,6 @@ if ($outputs) {
     }
 }
 
-foreach ($name in @(
-    'VALIDATION_KEY_VAULT_URL',
-    'VALIDATION_SECRET_NAME',
-    'VALIDATION_EXPECTED_VALUE'
-)) {
-    & gh variable delete $name --repo $Repository 2>$null
-    if ($LASTEXITCODE -ne 0) {
-        Write-Verbose "GitHub variable '$name' did not exist or could not be deleted."
-    }
-}
-
 if ($DeleteGitHubApp) {
     if (-not (Test-Path $credentialPath)) {
         throw "Cannot delete the GitHub App because '$credentialPath' is missing."

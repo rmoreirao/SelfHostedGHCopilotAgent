@@ -24,10 +24,6 @@ jobs:
           echo "EPHEMERAL_RUNNER_VALIDATED=${RUNNER_NAME}"
 
       - name: Validate private Key Vault access
-        env:
-          VALIDATION_KEY_VAULT_URL: ${{ vars.VALIDATION_KEY_VAULT_URL }}
-          VALIDATION_SECRET_NAME: ${{ vars.VALIDATION_SECRET_NAME }}
-          VALIDATION_EXPECTED_VALUE: ${{ vars.VALIDATION_EXPECTED_VALUE }}
         run: bash scripts/Test-RunnerPrivateAccess.sh
 
       - name: Verify arbitrary internet egress is denied

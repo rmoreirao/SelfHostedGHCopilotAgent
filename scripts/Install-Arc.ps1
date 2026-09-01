@@ -26,6 +26,8 @@ $resourceGroupName = Get-PocOutputValue $outputs 'resourceGroupName'
 $aksName = Get-PocOutputValue $outputs 'aksName'
 $arcKeyVaultName = Get-PocOutputValue $outputs 'arcKeyVaultName'
 $validationKeyVaultName = Get-PocOutputValue $outputs 'validationKeyVaultName'
+$validationKeyVaultUrl = Get-PocOutputValue $outputs 'validationKeyVaultUrl'
+$validationSecretName = Get-PocOutputValue $outputs 'validationSecretName'
 $runnerClientId = Get-PocOutputValue $outputs 'runnerIdentityClientId'
 $secretSyncClientId = Get-PocOutputValue $outputs 'secretSyncIdentityClientId'
 $tenantId = Get-PocOutputValue $outputs 'tenantId'
@@ -135,6 +137,9 @@ Render-Template `
         '__RUNNER_SCALE_SET_NAME__' = $runnerScaleSetName
         '__MAX_RUNNERS__' = $maxRunners
         '__RUNNER_IMAGE__' = $RunnerImage
+        '__VALIDATION_KEY_VAULT_URL__' = $validationKeyVaultUrl
+        '__VALIDATION_SECRET_NAME__' = $validationSecretName
+        '__VALIDATION_EXPECTED_VALUE__' = 'copilot-aks-private-access-ok'
     }
 
 Invoke-CheckedCommand kubectl @('apply', '-f', (Join-Path $root 'deploy\kubernetes\namespaces.yaml'))

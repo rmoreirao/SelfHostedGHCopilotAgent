@@ -176,20 +176,6 @@ finally {
     $arcSecretParameters = $null
 }
 
-$validationKeyVaultUrl = Get-PocOutputValue $outputs 'validationKeyVaultUrl'
-$validationSecretName = Get-PocOutputValue $outputs 'validationSecretName'
-foreach ($variable in @{
-    VALIDATION_KEY_VAULT_URL = $validationKeyVaultUrl
-    VALIDATION_SECRET_NAME = $validationSecretName
-    VALIDATION_EXPECTED_VALUE = 'copilot-aks-private-access-ok'
-}.GetEnumerator()) {
-    Invoke-CheckedCommand gh @(
-        'variable', 'set', $variable.Key,
-        '--repo', $Repository,
-        '--body', [string]$variable.Value
-    )
-}
-
 if (-not $SkipArcInstallation) {
     & (Join-Path $PSScriptRoot 'Install-Arc.ps1') `
         -DeploymentName $DeploymentName `

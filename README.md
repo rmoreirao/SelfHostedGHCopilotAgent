@@ -72,6 +72,9 @@ connected to the PoC.
 - The GitHub App private key never enters a runner pod. Deployment passes it to
   ARM in a short-lived, access-restricted parameter file and deletes that file
   in a `finally` block.
+- The non-secret validation vault URL, marker name, and expected marker value
+  are injected into runner pods. GitHub's generated Copilot workflow does not
+  expose repository variables to custom setup steps.
 - Setup steps are evidence, not a security boundary: GitHub can start Copilot
   after a failed setup step. Azure Firewall, identity, and network policy
   enforce isolation independently.
@@ -120,9 +123,8 @@ pwsh ./scripts/New-ArcGitHubApp.ps1 `
 ```
 
 `Deploy-Poc.ps1` is idempotent. It validates Bicep, creates the subscription
-deployment, writes App credentials to the private ARC vault, configures
-repository variables, connects to AKS, synchronizes the Kubernetes Secret, and
-installs both ARC charts.
+deployment, writes App credentials to the private ARC vault, connects to AKS,
+synchronizes the Kubernetes Secret, and installs both ARC charts.
 
 Non-secret outputs are stored in `.local/deployment-outputs.json`. The App
 private key and local App state are stored under `.local/`, restricted to the

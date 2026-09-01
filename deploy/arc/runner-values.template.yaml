@@ -47,6 +47,13 @@ template:
         imagePullPolicy: IfNotPresent
         command:
           - /home/runner/run.sh
+        env:
+          - name: VALIDATION_KEY_VAULT_URL
+            value: "__VALIDATION_KEY_VAULT_URL__"
+          - name: VALIDATION_SECRET_NAME
+            value: "__VALIDATION_SECRET_NAME__"
+          - name: VALIDATION_EXPECTED_VALUE
+            value: "__VALIDATION_EXPECTED_VALUE__"
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
